@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lanterna · wardrobe</title>
+<style>
+  :root { --void:#06070A; --ink:#EDE6D6; --soft:#9A9384; --flame:#FFB547; --panel:#12141A; --line:#2A2E36; --c1:#9AD08A; --c2:#7FB7FF; --c3:#E6A6FF; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--void); color:var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding:22px 16px 48px; }
+  main { max-width: 820px; margin: 0 auto; }
+  h1 { color:var(--flame); font-size:26px; margin:0 0 4px; letter-spacing:.02em; }
+  h2 { color:var(--flame); font-size:19px; margin:30px 0 6px; }
+  p.lead, p.note { color:var(--soft); font-size:14px; line-height:1.5; margin:0 0 12px; }
+  .try { display:grid; grid-template-columns: 1fr; gap:12px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px; }
+  .try canvas { width:100%; height:auto; border-radius:10px; display:block; }
+  .pickers { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:10px; }
+  .pickers label { font-size:13px; color:var(--soft); display:grid; gap:4px; min-width:0; }
+  select { width:100%; min-width:0; background:#1A1D24; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:9px; font:inherit; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+  figure { margin:0; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px; text-align:center; }
+  figure canvas { width:110px; height:110px; display:block; margin:0 auto 6px; }
+  figcaption { font-size:13px; line-height:1.35; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; padding:1px 7px; border-radius:20px; margin-top:4px; }
+  .r1 { background:rgba(154,208,138,.15); color:var(--c1); } .r2 { background:rgba(127,183,255,.15); color:var(--c2); } .r3 { background:rgba(230,166,255,.15); color:var(--c3); }
+  table { width:100%; border-collapse: collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+  th { color:var(--soft); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  td.num { text-align:right; font-variant-numeric: tabular-nums; }
+  .tablewrap { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:6px 12px; overflow-x:auto; }
+  .warn { border-left:3px solid var(--flame); padding:8px 12px; background:#16130D; border-radius:6px; color:var(--ink); font-size:14px; line-height:1.5; }
+</style>
+</head>
+<body>
+<main>
+  <p style="margin:0 0 14px"><a href="./" style="color:#FFB547">← All previews</a></p>
+  <h1>Sparky's wardrobe</h1>
+  <p class="lead">Cosmetics only: they don't change light, speed or difficulty, so the leaderboard stays fair. They're won at random in the crypts and worn from the Inventory ("Wardrobe" tab). Drawn as in the game, seen from above.</p>
+
+  <h2>Try the combinations</h2>
+  <div class="try">
+    <canvas id="tryC" width="760" height="300"></canvas>
+    <div class="pickers">
+      <label>Hood <select id="pHood"></select></label>
+      <label>Lantern <select id="pLamp"></select></label>
+      <label>Flame colour <select id="pFlame"></select></label>
+      <label>Trail <select id="pTrail"></select></label>
+      <label>Companion <select id="pPet"></select></label>
+    </div>
+  </div>
+
+  <h2>Hoods with a crest</h2>
+  <p class="note">The whole hood changes colour, with a crest on the back of the head (seen from above, like the rest of the character).</p>
+  <div class="grid" id="gHood"></div>
+  <h2>Lanterns</h2>
+  <div class="grid" id="gLamp"></div>
+  <h2>Flame colour</h2>
+  <p class="note">No blue flame: in the game the light turns blue when a Shadow is close (fear), and a blue flame would blur that warning. The silver flame takes its place.</p>
+  <div class="grid" id="gFlame"></div>
+  <h2>Trails</h2>
+  <div class="grid" id="gTrail"></div>
+  <h2>Companions</h2>
+  <p class="note">Little friends who follow Sparky a few steps behind. Cosmetic only: they give no light, don't scare the Shadows and don't touch anything, so they can't be mistaken for Shadows or for things to pick up.</p>
+  <div class="grid" id="gPet"></div>
+
+  <h2>Chances in the crypts</h2>
+  <p class="note">Every time you clear a crypt (with the Guardian or a secret one) there's a <b>50%</b> chance that a gift appears: a cosmetic you don't own yet, which you can pick up or leave. Which one depends on rarity: common weight 6, uncommon weight 3, rare weight 1. The percentages below are per crypt cleared when you don't own anything yet; as you find them, the remaining ones become more likely.</p>
+  <div class="tablewrap"><table id="probT"><thead><tr><th>Cosmetic</th><th>Type</th><th>Rarity</th><th style="text-align:right">Chance per crypt</th></tr></thead><tbody></tbody></table></div>
+  <p class="note" id="probSum" style="margin-top:10px"></p>
+  </main>
+<script>
+const TAU = Math.PI * 2;
+// ---------- catalogue ----------
+const HOODS = [
+  { id: 'base', name: 'Cloth hood', base: true, rar: 0 },
+  { id: 'red', name: 'Red hood · flame crest', hood: '#8E2A24', dark: '#5E1814', em: 'flame', emc: '#FFC857', rar: 1 },
+  { id: 'night', name: 'Midnight-blue hood · moon crest', hood: '#22305C', dark: '#141C3A', em: 'moon', emc: '#E8E2C8', rar: 1 },
+  { id: 'moss', name: 'Moss-green hood · key crest', hood: '#36522C', dark: '#22361C', em: 'key', emc: '#E8C25A', rar: 2 },
+  { id: 'violet', name: 'Violet hood · star crest', hood: '#4E2A6E', dark: '#321A48', em: 'star', emc: '#F2D9FF', rar: 2 },
+  { id: 'ash', name: 'Ash-grey hood · Borgo Cinerea crest', hood: '#6A6660', dark: '#45423E', em: 'tower', emc: '#EDE6D6', rar: 3 },
+  { id: 'master', name: 'The master\'s cloak · lantern crest', hood: '#9A6A2A', dark: '#6A4618', em: 'lantern', emc: '#FFF0C8', rar: 3 },
+];
+const LAMPS = [
+  { id: 'base', name: 'Tin lantern', rar: 0 },
+  { id: 'torch', name: 'Torch', rar: 1 },
+  { id: 'candles', name: 'Candelabra', rar: 2 },
+  { id: 'crystal', name: 'Crystal lantern', rar: 3 },
+  { id: 'pumpkin', name: 'Pumpkin lantern', rar: 3 },
+];
+const FLAMES = [
+  { id: 'base', name: 'Warm flame', core: '#FFF0C8', glow: [255, 170, 70], rar: 0 },
+  { id: 'silver', name: 'Silver flame', core: '#FFFFFF', glow: [225, 225, 235], rar: 1 },
+  { id: 'wisp', name: 'Green will-o\'-the-wisp', core: '#E4FFC8', glow: [140, 230, 110], rar: 2 },
+  { id: 'violet', name: 'Violet flame', core: '#F4DEFF', glow: [190, 120, 255], rar: 2 },
+  { id: 'gold', name: 'Golden flame', core: '#FFF6B0', glow: [255, 205, 60], rar: 3, sparkle: true },
+];
+const TRAILS = [
+  { id: 'none', name: 'No trail', rar: 0 },
+  { id: 'fireflies', name: 'Firefly trail', rar: 2 },
+  { id: 'sparks', name: 'Spark trail', rar: 2 },
+  { id: 'crystal', name: 'Crystal dust', rar: 3 },
+];
+const PETS = [
+  { id: 'none', name: 'No companion', rar: 0 },
+  { id: 'moth', name: 'Light moth', rar: 2 },
+  { id: 'cat', name: 'Black cat', rar: 2 },
+  { id: 'owl', name: 'Little owl', rar: 3 },
+  { id: 'salamander', name: 'Ember salamander', rar: 3 },
+];
+const RAR = ['', 'Common', 'Uncommon', 'Rare'], RARC = ['', 'r1', 'r2', 'r3'], W8 = [0, 6, 3, 1];
+
+// ---------- drawing (same proportions as the game: everything scales with TS) ----------
+function floor(x, sx, sy, TS, v) { x.fillStyle = v < .5 ? '#1A1D23' : '#1D2027'; x.fillRect(sx, sy, TS, TS); }
+function wall(x, sx, sy, TS) { x.fillStyle = '#3B3F4A'; x.fillRect(sx, sy, TS, TS); x.fillStyle = '#545A67'; x.fillRect(sx, sy, TS, Math.max(3, TS * .22)); x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(sx, sy + TS - 2, TS, 2); x.fillRect(sx + TS - 2, sy, 2, TS); }
+function glow(x, px, py, TS, fl, t) {
+  const [r, g, b] = fl.glow, R = TS * 3.2, f = .9 + .1 * Math.sin(t * 9);
+  const gr = x.createRadialGradient(px, py, 0, px, py, R);
+  gr.addColorStop(0, `rgba(${r},${g},${b},${(.28 * f).toFixed(3)})`); gr.addColorStop(.5, `rgba(${r},${g},${b},.08)`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  x.save(); x.globalCompositeOperation = 'lighter'; x.fillStyle = gr; x.fillRect(px - R, py - R, 2 * R, 2 * R); x.restore();
+}
+function trail(x, pts, TS, tr, t) {
+  if (tr.id === 'none') return;
+  pts.forEach((p, i) => {
+    const k = 1 - i / pts.length; if (k <= 0) return;
+    const jx = Math.sin(t * 5 + i * 1.7) * TS * .12, jy = Math.cos(t * 4 + i * 2.3) * TS * .12;
+    if (tr.id === 'fireflies') { x.fillStyle = `rgba(220,255,140,${(k * .85).toFixed(3)})`; x.beginPath(); x.arc(p.x + jx, p.y + jy, TS * .045 * (0.6 + k), 0, TAU); x.fill(); x.fillStyle = `rgba(200,240,120,${(k * .2).toFixed(3)})`; x.beginPath(); x.arc(p.x + jx, p.y + jy, TS * .14 * k, 0, TAU); x.fill(); }
+    if (tr.id === 'sparks') { x.fillStyle = `rgba(255,${150 + (i * 13) % 80},60,${k.toFixed(3)})`; x.fillRect(p.x + jx - 1, p.y + jy - 1 - (1 - k) * TS * .3, TS * .05, TS * .05); }
+    if (tr.id === 'crystal') { x.fillStyle = `rgba(180,230,255,${(k * .9).toFixed(3)})`; const s = TS * .06 * (0.5 + k); x.beginPath(); x.moveTo(p.x + jx, p.y + jy - s); x.lineTo(p.x + jx + s * .6, p.y + jy); x.lineTo(p.x + jx, p.y + jy + s); x.lineTo(p.x + jx - s * .6, p.y + jy); x.closePath(); x.fill(); }
+  });
+}
+function player(x, px, py, TS, ang, hood, lamp, fl, t, noLamp) {
+  x.save(); x.translate(px, py); x.rotate(ang);
+  if (hood.base) {   // as in the game today: white head, dark hood at the back
+    x.fillStyle = '#EDE6D6'; x.beginPath(); x.arc(0, 0, TS * .3, 0, TAU); x.fill();
+    x.fillStyle = '#2A2620'; x.beginPath(); x.arc(-TS * .02, 0, TS * .3, Math.PI * .55, Math.PI * 1.45); x.closePath(); x.fill();
+    x.beginPath(); x.ellipse(-TS * .06, 0, TS * .1, TS * .27, 0, 0, TAU); x.fill();
+  } else {           // the whole hood in colour, only the face peeps out in front, the emblem on the back
+    x.fillStyle = hood.hood; x.beginPath(); x.arc(0, 0, TS * .31, 0, TAU); x.fill();
+    x.fillStyle = hood.dark; x.beginPath(); x.arc(0, 0, TS * .31, Math.PI * .62, Math.PI * 1.38); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = Math.max(1, TS * .02); x.beginPath(); x.arc(0, 0, TS * .31, 0, TAU); x.stroke();
+    x.fillStyle = '#EDE6D6'; x.beginPath(); x.ellipse(TS * .14, 0, TS * .12, TS * .17, 0, 0, TAU); x.fill();       // the face
+    x.strokeStyle = hood.dark; x.lineWidth = Math.max(1, TS * .03); x.beginPath(); x.ellipse(TS * .14, 0, TS * .13, TS * .18, 0, -Math.PI / 2, Math.PI / 2, true); x.stroke();
+    emblem(x, hood.em, -TS * .11, 0, TS * .10, hood.emc, t);
+  }
+  x.fillStyle = '#2A2620'; x.beginPath(); x.arc(TS * .15, -TS * .09, TS * .035, 0, TAU); x.arc(TS * .15, TS * .09, TS * .035, 0, TAU); x.fill();
+  x.strokeStyle = '#2A2620'; x.lineWidth = Math.max(1, TS * .035); x.beginPath(); x.moveTo(TS * .08, TS * .25); x.lineTo(TS * .3, TS * .3); x.stroke();
+  x.restore();
+  // the lantern, upright, on the right hand side
+  const ca = Math.cos(ang), sa = Math.sin(ang), ox = TS * .34, oy = TS * .3;
+  if (!noLamp) lantern(x, px + ca * ox - sa * oy, py + sa * ox + ca * oy, TS, lamp, fl, t);
+}
+function lantern(x, lx, ly, TS, lamp, fl, t) {
+  const w = TS * .17, h = TS * .21, f = .85 + .15 * Math.sin(t * 9), [r, g, b] = fl.glow;
+  const flame = (cx, cy, fw, fh) => {   // a little flame in the chosen colour
+    x.fillStyle = `rgb(${r},${g},${b})`; x.beginPath(); x.moveTo(cx, cy - fh * f); x.quadraticCurveTo(cx + fw, cy - fh * .2, cx, cy + fh * .25); x.quadraticCurveTo(cx - fw, cy - fh * .2, cx, cy - fh * f); x.fill();
+    x.fillStyle = fl.core; x.beginPath(); x.ellipse(cx, cy - fh * .05, fw * .35, fh * .35 * f, 0, 0, TAU); x.fill();
+  };
+  if (lamp.id === 'pumpkin') {
+    x.fillStyle = '#E8731A'; [-.3, 0, .3].forEach(o => { x.beginPath(); x.ellipse(lx + o * w, ly, w * .4, h * .5, 0, 0, TAU); x.fill(); });
+    x.fillStyle = '#3E5A2A'; x.fillRect(lx - w * .08, ly - h * .68, w * .16, h * .2);
+    x.fillStyle = fl.core; x.beginPath(); x.moveTo(lx - w * .3, ly - h * .05); x.lineTo(lx - w * .1, ly - h * .05); x.lineTo(lx - w * .2, ly - h * .25); x.closePath(); x.moveTo(lx + w * .3, ly - h * .05); x.lineTo(lx + w * .1, ly - h * .05); x.lineTo(lx + w * .2, ly - h * .25); x.closePath(); x.fill();
+    x.fillRect(lx - w * .25, ly + h * .12, w * .5, h * .1);
+  } else if (lamp.id === 'torch') {       // a wooden torch with a tarred head
+    x.fillStyle = '#6A4628'; x.fillRect(lx - w * .12, ly - h * .1, w * .24, h * .95);
+    x.fillStyle = '#2A1E14'; x.fillRect(lx - w * .22, ly - h * .32, w * .44, h * .28);
+    x.strokeStyle = '#8A6A3A'; x.lineWidth = Math.max(1, TS * .012); x.beginPath(); x.moveTo(lx - w * .22, ly - h * .22); x.lineTo(lx + w * .22, ly - h * .14); x.stroke();
+    flame(lx, ly - h * .42, w * .42, h * .7);
+  } else if (lamp.id === 'candles') {     // a small iron candelabra with three candles
+    x.strokeStyle = '#3A3530'; x.lineWidth = Math.max(1.2, TS * .022);
+    x.beginPath(); x.moveTo(lx, ly + h * .5); x.lineTo(lx, ly - h * .05); x.moveTo(lx - w * .45, ly - h * .05); x.quadraticCurveTo(lx, ly + h * .25, lx + w * .45, ly - h * .05); x.stroke();
+    x.fillStyle = '#3A3530'; x.fillRect(lx - w * .28, ly + h * .45, w * .56, h * .1);
+    [[-.45, .18], [0, .26], [.45, .18]].forEach(([o, hh]) => {
+      x.fillStyle = '#E9DFC6'; x.fillRect(lx + o * w - w * .09, ly - h * .05 - h * hh * 1.4, w * .18, h * hh * 1.4);
+      flame(lx + o * w, ly - h * .05 - h * hh * 1.4 - h * .08, w * .14, h * .26);
+    });
+  } else {                                  // tin lantern (start) or crystal lantern
+    const crystal = lamp.id === 'crystal', frame = crystal ? '#7FC8E8' : '#2A2620';
+    x.fillStyle = frame; x.fillRect(lx - w * .35, ly - h * .68, w * .7, h * .14); x.fillRect(lx - w / 2, ly + h * .42, w, h * .12);
+    if (crystal) { x.beginPath(); x.moveTo(lx - w * .3, ly - h * .68); x.lineTo(lx, ly - h * .95); x.lineTo(lx + w * .3, ly - h * .68); x.fill(); }
+    x.fillStyle = crystal ? `rgba(${r},${g},${b},.75)` : `rgb(${r},${g},${b})`; x.fillRect(lx - w * .42, ly - h * .54, w * .84, h * .96);
+    x.fillStyle = fl.core; x.beginPath(); x.ellipse(lx, ly - h * .02, w * .18, h * .3 * f, 0, 0, TAU); x.fill();
+    x.strokeStyle = frame; x.lineWidth = Math.max(1, TS * (crystal ? .02 : .03)); x.strokeRect(lx - w * .42, ly - h * .54, w * .84, h * .96);
+    if (crystal) { x.strokeStyle = 'rgba(220,245,255,.9)'; x.beginPath(); x.moveTo(lx - w * .42, ly - h * .54); x.lineTo(lx + w * .42, ly + h * .42); x.moveTo(lx + w * .42, ly - h * .54); x.lineTo(lx - w * .42, ly + h * .42); x.stroke(); }
+  }
+  if (fl.sparkle) { const k = (t * 2) % 1; x.fillStyle = `rgba(255,230,120,${(1 - k).toFixed(3)})`; x.fillRect(lx + Math.sin(t * 7) * w * .4, ly - h * .6 - k * TS * .3, 2, 2); }
+}
+function emblem(x, em, cx, cy, r, c, t) {
+  x.save(); x.translate(cx, cy); x.rotate(Math.PI / 2);          // upright when the head looks to the right
+  x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.moveTo(-r, -r); x.lineTo(r, -r); x.lineTo(r, r * .3); x.quadraticCurveTo(r * .9, r * 1.1, 0, r * 1.3); x.quadraticCurveTo(-r * .9, r * 1.1, -r, r * .3); x.closePath(); x.fill();   // shield
+  x.strokeStyle = c; x.lineWidth = Math.max(1, r * .12); x.stroke();
+  x.fillStyle = c; x.strokeStyle = c;
+  const k = r * .62;
+  if (em === 'flame') { x.beginPath(); x.moveTo(0, -k); x.quadraticCurveTo(k * .9, 0, k * .5, k * .7); x.quadraticCurveTo(0, k * 1.1, -k * .5, k * .7); x.quadraticCurveTo(-k * .9, 0, 0, -k); x.fill(); }
+  if (em === 'moon') { x.beginPath(); x.arc(0, k * .1, k * .8, 0, TAU); x.fill(); x.fillStyle = 'rgba(0,0,0,.6)'; x.beginPath(); x.arc(k * .35, -k * .1, k * .65, 0, TAU); x.fill(); }
+  if (em === 'key') { x.lineWidth = Math.max(1, r * .16); x.beginPath(); x.arc(0, -k * .45, k * .35, 0, TAU); x.moveTo(0, -k * .1); x.lineTo(0, k * .95); x.moveTo(0, k * .55); x.lineTo(k * .35, k * .55); x.moveTo(0, k * .85); x.lineTo(k * .3, k * .85); x.stroke(); }
+  if (em === 'star') { x.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? k * .42 : k; x[i ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr + k * .1); } x.closePath(); x.fill(); }
+  if (em === 'tower') { x.fillRect(-k * .45, -k * .4, k * .9, k * 1.3); x.fillRect(-k * .65, -k * .75, k * .3, k * .4); x.fillRect(-k * .15, -k * .75, k * .3, k * .4); x.fillRect(k * .35, -k * .75, k * .3, k * .4); x.fillStyle = 'rgba(0,0,0,.6)'; x.fillRect(-k * .15, k * .35, k * .3, k * .55); }
+  if (em === 'lantern') { x.fillRect(-k * .4, -k * .9, k * .8, k * .2); x.fillRect(-k * .5, k * .8, k, k * .2); x.globalAlpha = .9; x.fillRect(-k * .38, -k * .7, k * .76, k * 1.5); x.globalAlpha = 1; x.fillStyle = '#FF9A3D'; x.beginPath(); x.ellipse(0, k * .1, k * .18, k * .38 * (.9 + .1 * Math.sin(t * 9)), 0, 0, TAU); x.fill(); }
+  x.restore();
+}
+// companions: they follow a few steps behind, purely for looks (no light, no effect on the game)
+function pet(x, p, ang, TS, kind, t) {
+  if (kind === 'none') return;
+  x.save(); x.translate(p.x, p.y);
+  if (kind === 'moth') {           // a pale moth fluttering around, softly glowing
+    const fx = Math.sin(t * 3.1) * TS * .12, fy = Math.cos(t * 2.3) * TS * .1 - TS * .15; x.translate(fx, fy);
+    const g = x.createRadialGradient(0, 0, 0, 0, 0, TS * .3); g.addColorStop(0, 'rgba(255,240,200,.35)'); g.addColorStop(1, 'rgba(255,240,200,0)'); x.fillStyle = g; x.beginPath(); x.arc(0, 0, TS * .3, 0, TAU); x.fill();
+    const fl = .35 + .65 * Math.abs(Math.sin(t * 18)); x.fillStyle = '#F2E6C8';
+    [-1, 1].forEach(sd => { x.beginPath(); x.ellipse(sd * TS * .08 * fl, -TS * .02, TS * .09 * fl, TS * .06, sd * .5, 0, TAU); x.fill(); x.beginPath(); x.ellipse(sd * TS * .06 * fl, TS * .05, TS * .06 * fl, TS * .045, -sd * .4, 0, TAU); x.fill(); });
+    x.fillStyle = '#8A7A5A'; x.beginPath(); x.ellipse(0, 0, TS * .025, TS * .07, 0, 0, TAU); x.fill();
+  }
+  if (kind === 'cat') {            // a black cat seen from above, tail swaying, yellow eyes
+    x.rotate(ang);
+    x.strokeStyle = '#111014'; x.lineWidth = TS * .05; x.lineCap = 'round'; x.beginPath(); x.moveTo(-TS * .16, 0); x.quadraticCurveTo(-TS * .3, Math.sin(t * 4) * TS * .14, -TS * .36, Math.sin(t * 4 + 1) * TS * .1); x.stroke();
+    x.fillStyle = '#111014'; x.beginPath(); x.ellipse(-TS * .04, 0, TS * .15, TS * .1, 0, 0, TAU); x.fill();
+    x.beginPath(); x.arc(TS * .13, 0, TS * .08, 0, TAU); x.fill();
+    x.beginPath(); x.moveTo(TS * .12, -TS * .06); x.lineTo(TS * .2, -TS * .11); x.lineTo(TS * .18, -TS * .03); x.moveTo(TS * .12, TS * .06); x.lineTo(TS * .2, TS * .11); x.lineTo(TS * .18, TS * .03); x.fill();
+    x.strokeStyle = 'rgba(160,150,190,.35)'; x.lineWidth = 1; x.beginPath(); x.ellipse(-TS * .04, 0, TS * .15, TS * .1, 0, 0, TAU); x.stroke();
+    x.fillStyle = '#FFD84A'; x.beginPath(); x.arc(TS * .17, -TS * .03, TS * .018, 0, TAU); x.arc(TS * .17, TS * .03, TS * .018, 0, TAU); x.fill();
+  }
+  if (kind === 'owl') {            // a little owl hovering above your shoulder
+    const fy = Math.sin(t * 2) * TS * .05 - TS * .22; x.translate(0, fy);
+    x.fillStyle = 'rgba(0,0,0,.3)'; x.beginPath(); x.ellipse(0, TS * .3, TS * .12, TS * .05, 0, 0, TAU); x.fill();
+    const fl = Math.sin(t * 9); x.fillStyle = '#6A4E34';
+    [-1, 1].forEach(sd => { x.beginPath(); x.ellipse(sd * TS * (.13 + .03 * fl), 0, TS * .12, TS * .06 + TS * .03 * fl, sd * (.3 + .3 * fl), 0, TAU); x.fill(); });
+    x.fillStyle = '#8A6A48'; x.beginPath(); x.arc(0, 0, TS * .12, 0, TAU); x.fill();
+    x.fillStyle = '#C9A880'; x.beginPath(); x.ellipse(0, TS * .03, TS * .07, TS * .08, 0, 0, TAU); x.fill();
+    x.fillStyle = '#F2E2B8'; x.beginPath(); x.arc(-TS * .045, -TS * .03, TS * .04, 0, TAU); x.arc(TS * .045, -TS * .03, TS * .04, 0, TAU); x.fill();
+    const blink = (t % 4) < 3.85; x.fillStyle = '#2A1E14';
+    if (blink) { x.beginPath(); x.arc(-TS * .045, -TS * .03, TS * .02, 0, TAU); x.arc(TS * .045, -TS * .03, TS * .02, 0, TAU); x.fill(); } else { x.fillRect(-TS * .07, -TS * .035, TS * .05, 2); x.fillRect(TS * .02, -TS * .035, TS * .05, 2); }
+    x.fillStyle = '#E8A040'; x.beginPath(); x.moveTo(-TS * .015, 0); x.lineTo(TS * .015, 0); x.lineTo(0, TS * .03); x.fill();
+    x.fillStyle = '#6A4E34'; x.beginPath(); x.moveTo(-TS * .1, -TS * .08); x.lineTo(-TS * .07, -TS * .14); x.lineTo(-TS * .03, -TS * .1); x.moveTo(TS * .1, -TS * .08); x.lineTo(TS * .07, -TS * .14); x.lineTo(TS * .03, -TS * .1); x.fill();
+  }
+  if (kind === 'salamander') {     // a small ember salamander scurrying behind, glowing spots
+    x.rotate(ang); const w = Math.sin(t * 10) * .35;
+    const g = x.createRadialGradient(0, 0, 0, 0, 0, TS * .3); g.addColorStop(0, 'rgba(255,120,40,.25)'); g.addColorStop(1, 'rgba(255,120,40,0)'); x.fillStyle = g; x.beginPath(); x.arc(0, 0, TS * .3, 0, TAU); x.fill();
+    x.strokeStyle = '#B8401C'; x.lineCap = 'round';
+    x.lineWidth = TS * .045; x.beginPath(); x.moveTo(-TS * .08, 0); x.quadraticCurveTo(-TS * .2, Math.sin(t * 10 + 1) * TS * .08, -TS * .3, Math.sin(t * 10 + 2) * TS * .06); x.stroke();
+    x.lineWidth = TS * .025; [[.06, 1], [-.05, -1]].forEach(([o, sd]) => [-1, 1].forEach(s2 => { x.beginPath(); x.moveTo(TS * o, 0); x.lineTo(TS * (o + .05 * sd * w), s2 * TS * .1); x.stroke(); }));
+    x.fillStyle = '#D85A24'; x.beginPath(); x.ellipse(0, 0, TS * .11, TS * .05, 0, 0, TAU); x.fill();
+    x.beginPath(); x.ellipse(TS * .12, 0, TS * .05, TS * .045, 0, 0, TAU); x.fill();
+    x.fillStyle = `rgba(255,214,90,${(.7 + .3 * Math.sin(t * 6)).toFixed(3)})`; [[-.06, 0], [0, .01], [.05, -.01]].forEach(([a, b]) => { x.beginPath(); x.arc(TS * a, TS * b, TS * .016, 0, TAU); x.fill(); });
+    x.fillStyle = '#1A0A04'; x.beginPath(); x.arc(TS * .15, -TS * .022, TS * .01, 0, TAU); x.arc(TS * .15, TS * .022, TS * .01, 0, TAU); x.fill();
+  }
+  x.restore();
+}
+function darkness(x, px, py, TS, W, H) { const g = x.createRadialGradient(px, py, TS * .5, px, py, TS * 3.4); g.addColorStop(0, 'rgba(6,7,10,0)'); g.addColorStop(1, 'rgba(6,7,10,.8)'); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+
+// a small scene for each card: the player walking in a circle (so trails show)
+function card(x, t, o) {
+  const W = 220, H = 220, TS = 110; x.clearRect(0, 0, W, H);
+  for (let yy = 0; yy < 3; yy++) for (let xx = 0; xx < 3; xx++) floor(x, xx * TS - 55, yy * TS - 55, TS, ((xx * 7 + yy * 3) % 10) / 10);
+  const a = t * 1.3, px = W / 2 - 8 + Math.cos(a) * 22, py = H / 2 - 8 + Math.sin(a) * 22, ang = a + Math.PI / 2;
+  const pts = []; for (let i = 1; i < 14; i++) { const b = a - i * .16; pts.push({ x: W / 2 - 8 + Math.cos(b) * 22, y: H / 2 - 8 + Math.sin(b) * 22 }); }
+  darkness(x, px, py, TS, W, H);
+  glow(x, px, py, TS, o.flame, t);
+  trail(x, pts, TS, o.trail, t);
+  if (o.pet) { const q = pts[11], q2 = pts[10]; pet(x, q, Math.atan2(q2.y - q.y, q2.x - q.x), TS * 1.15, o.pet.id, t); }
+  player(x, px, py, TS, ang, o.hood, o.lamp, o.flame, t);
+  if (o.zoomHood) {   // the head seen up close, emblem upright
+    x.fillStyle = 'rgba(6,7,10,.75)'; x.beginPath(); x.arc(176, 44, 40, 0, TAU); x.fill(); x.strokeStyle = 'rgba(237,230,214,.25)'; x.lineWidth = 1.5; x.stroke();
+    player(x, 176, 44, 115, -Math.PI / 2, o.hood, o.lamp, o.flame, t, true);
+  }
+  if (o.zoomPet && o.pet.id !== 'none') {   // the companion seen up close
+    x.fillStyle = 'rgba(6,7,10,.75)'; x.beginPath(); x.arc(176, 44, 40, 0, TAU); x.fill(); x.strokeStyle = 'rgba(237,230,214,.25)'; x.lineWidth = 1.5; x.stroke();
+    x.save(); x.beginPath(); x.arc(176, 44, 39, 0, TAU); x.clip(); pet(x, { x: 176, y: o.pet.id === 'owl' ? 72 : o.pet.id === 'moth' ? 62 : 52 }, -Math.PI / 2, 130, o.pet.id, t); x.restore();
+  }
+  if (o.zoom) {   // the lantern seen up close, in the corner
+    x.fillStyle = 'rgba(6,7,10,.75)'; x.beginPath(); x.arc(178, 44, 34, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(237,230,214,.25)'; x.lineWidth = 1.5; x.stroke();
+    lantern(x, 178, 46, 190, o.lamp, o.flame, t);
+  }
+}
+const base = { hood: HOODS[0], lamp: LAMPS[0], flame: FLAMES[0], trail: TRAILS[0], pet: PETS[0] };
+const cards = [];
+function makeGrid(id, list, key) {
+  const g = document.getElementById(id);
+  list.forEach(it => {
+    const f = document.createElement('figure'), c = document.createElement('canvas'); c.width = c.height = 220;
+    const cap = document.createElement('figcaption'); cap.innerHTML = `${it.name}<br><span class="tag ${it.rar ? RARC[it.rar] : ''}">${it.rar ? RAR[it.rar] : 'Starter'}</span>`;
+    f.append(c, cap); g.appendChild(f);
+    cards.push({ x: c.getContext('2d'), o: Object.assign({}, base, { [key]: it }, { zoom: key === 'lamp' || key === 'flame', zoomHood: key === 'hood', zoomPet: key === 'pet' }) });
+  });
+}
+makeGrid('gHood', HOODS, 'hood'); makeGrid('gLamp', LAMPS, 'lamp'); makeGrid('gFlame', FLAMES, 'flame'); makeGrid('gTrail', TRAILS, 'trail'); makeGrid('gPet', PETS, 'pet');
+
+// try-on corridor
+const tc = document.getElementById('tryC'), tx = tc.getContext('2d');
+const sel = { hood: 'pHood', lamp: 'pLamp', flame: 'pFlame', trail: 'pTrail', pet: 'pPet' }, LISTS = { hood: HOODS, lamp: LAMPS, flame: FLAMES, trail: TRAILS, pet: PETS };
+const cur = Object.assign({}, base);
+Object.entries(sel).forEach(([k, id]) => { const s = document.getElementById(id); LISTS[k].forEach((it, i) => { const o = document.createElement('option'); o.value = i; o.textContent = it.name + (it.rar ? ` (${RAR[it.rar].toLowerCase()})` : ''); s.appendChild(o); }); s.onchange = () => { cur[k] = LISTS[k][s.value]; }; });
+document.getElementById('pHood').value = 6; cur.hood = HOODS[6]; document.getElementById('pLamp').value = 2; cur.lamp = LAMPS[2]; document.getElementById('pFlame').value = 2; cur.flame = FLAMES[2]; document.getElementById('pTrail').value = 1; cur.trail = TRAILS[1]; document.getElementById('pPet').value = 2; cur.pet = PETS[2];
+function tryScene(t) {
+  const W = 760, H = 300, TS = 75; tx.fillStyle = '#06070A'; tx.fillRect(0, 0, W, H);
+  for (let xx = 0; xx < 12; xx++) { wall(tx, xx * TS - 20, 0, TS); wall(tx, xx * TS - 20, H - TS, TS); for (let yy = 1; yy < 3; yy++) floor(tx, xx * TS - 20, yy * TS, TS, ((xx * 7 + yy * 3) % 10) / 10); }
+  const k = (t * 0.12) % 1, px = 60 + k * (W - 120), py = H / 2 + Math.sin(t * 2) * 6;
+  const pts = []; for (let i = 1; i < 16; i++) pts.push({ x: px - i * 11, y: H / 2 + Math.sin((t - i * .04) * 2) * 6 });
+  darkness(tx, px, py, TS, W, H); glow(tx, px, py, TS, cur.flame, t); trail(tx, pts, TS, cur.trail, t); pet(tx, { x: px - TS * 1.1, y: H / 2 + Math.sin((t - .5) * 2) * 6 + TS * .15 }, 0, TS * 1.1, cur.pet.id, t); player(tx, px, py, TS, 0, cur.hood, cur.lamp, cur.flame, t);
+}
+
+// probability table
+const ALL = [].concat(HOODS.map(i => ['Hood', i]), LAMPS.map(i => ['Lantern', i]), FLAMES.map(i => ['Flame', i]), TRAILS.map(i => ['Trail', i]), PETS.map(i => ['Companion', i])).filter(([, i]) => i.rar);
+const DROP = 0.5, tot = ALL.reduce((a, [, i]) => a + W8[i.rar], 0);
+const tb = document.querySelector('#probT tbody');
+ALL.sort((a, b) => a[1].rar - b[1].rar).forEach(([k, i]) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i.name}</td><td>${k}</td><td><span class="tag ${RARC[i.rar]}">${RAR[i.rar]}</span></td><td class="num">${(DROP * W8[i.rar] / tot * 100).toFixed(1)}%</td>`; tb.appendChild(tr); });
+const cnt = r => ALL.filter(([, i]) => i.rar === r).length;
+document.getElementById('probSum').textContent = `${ALL.length} cosmetics to find in all: ${cnt(1)} common, ${cnt(2)} uncommon, ${cnt(3)} rare. Chance of a gift for every crypt cleared: ${DROP * 100}%.`;
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(ms) { const t = reduce ? 1 : ms / 1000; cards.forEach(c => card(c.x, t, c.o)); tryScene(t); if (!reduce) requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

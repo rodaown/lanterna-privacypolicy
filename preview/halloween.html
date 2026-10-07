@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lanterna · Halloween assets</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+  :root { --void:#06070A; --ink:#EDE6D6; --soft:#9A9384; --flame:#FFB547; --pump:#FF8A1F; --panel:#12141A; --line:#2A2E36; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--void); color:var(--ink); font-family:"Atkinson Hyperlegible", system-ui, sans-serif; padding:22px 16px 48px; }
+  main { max-width: 760px; margin: 0 auto; }
+  h1 { font-family:"Pixelify Sans", monospace; color:var(--pump); font-size:28px; margin:0 0 4px; }
+  h2 { font-family:"Pixelify Sans", monospace; color:var(--flame); font-size:20px; margin:30px 0 4px; }
+  p.lead, p.note { color:var(--soft); font-size:14px; line-height:1.5; margin:0 0 14px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }
+  figure { margin:0; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px; text-align:center; }
+  figure canvas { width:120px; height:120px; display:block; margin:0 auto 6px; }
+  figcaption { font-size:13px; line-height:1.35; }
+  figcaption small { display:block; color:var(--soft); font-size:12px; }
+  .scene { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px; }
+  .scene canvas { width:100%; height:auto; display:block; border-radius:8px; }
+  .toggle { display:flex; gap:8px; margin:8px 0 0; }
+  .toggle button { flex:1; background:#1A1D24; color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:9px; font:inherit; cursor:pointer; }
+  .toggle button[aria-pressed="true"] { border-color:var(--pump); color:var(--pump); }
+  /* --- mock of the app's menu --- */
+  .phone { position:relative; width:300px; max-width:100%; margin:0 auto; height:520px; background:var(--void); border:1px solid var(--line); border-radius:26px; overflow:hidden; padding:30px 18px; }
+  .web { position:absolute; width:96px; height:96px; pointer-events:none; }
+  .web.tl { top:0; left:0; } .web.tr { top:0; right:0; transform:scaleX(-1); }
+  .brand { display:flex; align-items:center; gap:12px; margin-top:26px; }
+  .brand h3 { font-family:"Pixelify Sans", monospace; font-size:38px; margin:0; color:var(--flame); text-shadow:0 0 30px rgba(255,138,31,.45); }
+  .sub { font-family:"Pixelify Sans", monospace; color:var(--pump); margin:6px 0 22px; font-size:16px; letter-spacing:.5px; }
+  .btn { display:block; width:100%; margin:0 0 10px; padding:13px; background:#15171D; color:var(--ink); border:1px solid var(--line); border-radius:12px; font:700 16px "Atkinson Hyperlegible", sans-serif; text-align:left; }
+  .btn.main { background:var(--pump); color:#1B0F05; border-color:var(--pump); text-align:center; }
+  .bat { position:absolute; width:34px; height:16px; animation: fly 7s linear infinite; }
+  .bat.b2 { animation-duration: 10s; animation-delay: -4s; top: 200px; width:24px; height:12px; }
+  @keyframes fly { 0% { left:-40px; top:120px; } 25% { top:90px; } 50% { top:130px; } 75% { top:100px; } 100% { left:320px; top:115px; } }
+  .bat svg { width:100%; height:100%; animation: flap .25s ease-in-out infinite alternate; transform-origin: 50% 60%; }
+  @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(.45); } }
+  .skel { position:absolute; bottom:-4px; right:6px; width:70px; opacity:.8; }
+  .pumpkin-ico { width:54px; height:54px; flex:none; }
+  @media (prefers-reduced-motion: reduce) { .bat, .bat svg { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <p style="margin:0 0 14px"><a href="./" style="color:#FFB547">← All previews</a></p>
+  <h1>Halloween assets</h1>
+  <p class="lead">Decorations for Halloween week. They're drawn in code in the same style as the game (same colours, same square size), so this is how they look in the app, animated as in the game.</p>
+
+  <h2>In the maze</h2>
+  <p class="note">Rule: decorations go <b>on the walls only</b>, never on the squares you walk on. Pumpkins sit in small niches carved into the wall, the skeleton is carved into the stone (faded), cobwebs are see-through in the corners. They don't bob or sparkle like gems and items, so they never look like something to pick up. Use the buttons to compare.</p>
+  <div class="scene">
+    <canvas id="scene" width="720" height="480"></canvas>
+    <div class="toggle"><button id="tNormal" aria-pressed="false">Normal</button><button id="tHall" aria-pressed="true">Halloween</button></div>
+  </div>
+
+  <h2>Game elements</h2>
+  <div class="grid">
+    <figure><canvas data-a="pumpkinOff" width="240" height="240"></canvas><figcaption>Unlit pumpkin<small>in a niche in the wall</small></figcaption></figure>
+    <figure><canvas data-a="pumpkinOn" width="240" height="240"></canvas><figcaption>Lit pumpkin<small>when your light reaches it, still in the wall</small></figcaption></figure>
+    <figure><canvas data-a="web" width="240" height="240"></canvas><figcaption>Cobweb<small>in the corners of corridors</small></figcaption></figure>
+    <figure><canvas data-a="skeleton" width="240" height="240"></canvas><figcaption>Skeleton<small>carved into the stone walls</small></figcaption></figure>
+    <figure><canvas data-a="candy" width="240" height="240"></canvas><figcaption>Candy gem<small>counts as a gem</small></figcaption></figure>
+    <figure><canvas data-a="shadowHat" width="240" height="240"></canvas><figcaption>Shadow in a hat<small>a witch's hat</small></figcaption></figure>
+    <figure><canvas data-a="shadowChase" width="240" height="240"></canvas><figcaption>Chasing Shadow<small>red eyes, hat</small></figcaption></figure>
+    <figure><canvas data-a="hunterPump" width="240" height="240"></canvas><figcaption>Huntress<small>with a pumpkin head</small></figcaption></figure>
+    <figure><canvas data-a="guardian" width="240" height="240"></canvas><figcaption>Guardian<small>crown of horns + skull</small></figcaption></figure>
+    <figure><canvas data-a="lantern" width="240" height="240"></canvas><figcaption>Orange lantern<small>the light gets warmer</small></figcaption></figure>
+    <figure><canvas data-a="bat" width="240" height="240"></canvas><figcaption>Bat<small>flies through the dark now and then</small></figcaption></figure>
+  </div>
+
+  <h2>In the app's screens</h2>
+  <p class="note">The main menu: cobwebs in the corners, a pumpkin instead of the flame, the subtitle "Halloween Night", bats flying past and a skeleton peeking from the bottom.</p>
+  <div class="phone" aria-label="Menu preview">
+    <svg class="web tl" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="rgba(237,230,214,.35)" stroke-width="1.2"><path d="M0 0 L100 0 M0 0 L0 100 M0 0 L92 46 M0 0 L46 92 M0 0 L75 75"/><path d="M28 0 Q24 10 26 13 Q12 14 0 28"/><path d="M50 0 Q44 18 47 23 Q35 33 23 47 Q16 44 0 50"/><path d="M74 0 Q66 24 70 34 Q56 47 52 52 Q46 58 34 70 Q22 66 0 74"/></g></svg>
+    <svg class="web tr" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="rgba(237,230,214,.35)" stroke-width="1.2"><path d="M0 0 L100 0 M0 0 L0 100 M0 0 L92 46 M0 0 L46 92 M0 0 L75 75"/><path d="M28 0 Q24 10 26 13 Q12 14 0 28"/><path d="M50 0 Q44 18 47 23 Q35 33 23 47 Q16 44 0 50"/><path d="M74 0 Q66 24 70 34 Q56 47 52 52 Q46 58 34 70 Q22 66 0 74"/></g><line x1="62" y1="0" x2="62" y2="40" stroke="rgba(237,230,214,.4)"/><circle cx="62" cy="44" r="5" fill="#1B1B1F"/><g stroke="#1B1B1F" stroke-width="1.4"><path d="M57 42 l-6 -4 M57 45 l-7 0 M57 47 l-6 4 M67 42 l6 -4 M67 45 l7 0 M67 47 l6 4"/></g></svg>
+    <div class="bat"><svg viewBox="0 0 34 16" aria-hidden="true"><path fill="#1A1420" stroke="#3A2B45" stroke-width=".6" d="M17 6 C14 2 9 1 1 4 C5 5 6 8 5 11 C8 9 11 10 13 12 C14 10 15 9 17 10 C19 9 20 10 21 12 C23 10 26 9 29 11 C28 8 29 5 33 4 C25 1 20 2 17 6 Z"/><circle cx="15.6" cy="7" r=".9" fill="#FF8A1F"/><circle cx="18.4" cy="7" r=".9" fill="#FF8A1F"/></svg></div>
+    <div class="bat b2"><svg viewBox="0 0 34 16" aria-hidden="true"><path fill="#1A1420" d="M17 6 C14 2 9 1 1 4 C5 5 6 8 5 11 C8 9 11 10 13 12 C14 10 15 9 17 10 C19 9 20 10 21 12 C23 10 26 9 29 11 C28 8 29 5 33 4 C25 1 20 2 17 6 Z"/></svg></div>
+    <div class="brand"><canvas class="pumpkin-ico" id="menuPumpkin" width="108" height="108"></canvas><h3>Lanterna</h3></div>
+    <div class="sub">🕸 Halloween Night</div>
+    <div class="btn main">Play</div>
+    <div class="btn">Tutorial</div>
+    <div class="btn">Leaderboard</div>
+    <div class="btn">Settings</div>
+    <canvas class="skel" id="menuSkel" width="140" height="120"></canvas>
+  </div>
+</main>
+<script>
+const TAU = Math.PI * 2;
+let HALL = true;
+// ---------------- drawing (same tile size logic as the game: everything scales with TS) ----------------
+function floor(x, sx, sy, TS, v) { x.fillStyle = v < .5 ? '#1A1D23' : '#1D2027'; x.fillRect(sx, sy, TS, TS); }
+function crypt(x, sx, sy, TS, v) { x.fillStyle = v < .5 ? '#211C27' : '#251F2C'; x.fillRect(sx, sy, TS, TS); x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 1; x.strokeRect(sx + .5, sy + .5, TS - 1, TS - 1); }
+function wall(x, sx, sy, TS) { x.fillStyle = '#3B3F4A'; x.fillRect(sx, sy, TS, TS); x.fillStyle = '#545A67'; x.fillRect(sx, sy, TS, Math.max(3, TS * .22)); x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(sx, sy + TS - 2, TS, 2); x.fillRect(sx + TS - 2, sy, 2, TS); }
+
+function pumpkin(x, sx, sy, TS, t, on, glow = true) {
+  const cx = sx + TS / 2, cy = sy + TS * .56, r = TS * .3;
+  if (on && glow) { const g = x.createRadialGradient(cx, cy, 0, cx, cy, TS * .9); g.addColorStop(0, 'rgba(255,138,31,.35)'); g.addColorStop(1, 'rgba(255,138,31,0)'); x.fillStyle = g; x.fillRect(sx - TS * .5, sy - TS * .5, TS * 2, TS * 2); }
+  x.fillStyle = on ? '#E8731A' : '#7A4A22';
+  [-.55, 0, .55].forEach(o => { x.beginPath(); x.ellipse(cx + o * r, cy, r * .62, r * .8, 0, 0, TAU); x.fill(); });
+  x.strokeStyle = on ? 'rgba(120,50,10,.6)' : 'rgba(40,20,10,.6)'; x.lineWidth = Math.max(1, TS * .025);
+  [-.3, .3].forEach(o => { x.beginPath(); x.ellipse(cx + o * r, cy, r * .3, r * .78, 0, 0, TAU); x.stroke(); });
+  x.fillStyle = '#3E5A2A'; x.fillRect(cx - TS * .035, cy - r * 1.05, TS * .07, TS * .12);
+  // carved face
+  const f = on ? 0.85 + 0.15 * Math.sin(t * 11 + sx) : 1;
+  x.fillStyle = on ? `rgba(255,${Math.round(214 * f)},120,1)` : '#2A1A10';
+  x.beginPath(); x.moveTo(cx - r * .55, cy - r * .1); x.lineTo(cx - r * .2, cy - r * .1); x.lineTo(cx - r * .37, cy - r * .42); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(cx + r * .55, cy - r * .1); x.lineTo(cx + r * .2, cy - r * .1); x.lineTo(cx + r * .37, cy - r * .42); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(cx - r * .6, cy + r * .2); x.lineTo(cx - r * .3, cy + r * .45); x.lineTo(cx - r * .1, cy + r * .28); x.lineTo(cx + r * .1, cy + r * .5); x.lineTo(cx + r * .3, cy + r * .28); x.lineTo(cx + r * .6, cy + r * .2); x.lineTo(cx + r * .4, cy + r * .6); x.lineTo(cx - r * .4, cy + r * .6); x.closePath(); x.fill();
+}
+function web(x, sx, sy, TS, corner = 0) {
+  x.save(); x.translate(sx + (corner & 1 ? TS : 0), sy + (corner & 2 ? TS : 0)); x.scale(corner & 1 ? -1 : 1, corner & 2 ? -1 : 1);
+  x.strokeStyle = 'rgba(237,230,214,.38)'; x.lineWidth = Math.max(1, TS * .018);
+  const R = TS * .95, spokes = [0, .25, .5, .75, 1].map(k => k * Math.PI / 2);
+  spokes.forEach(a => { x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(a) * R, Math.sin(a) * R); x.stroke(); });
+  [.3, .55, .8].forEach(k => { x.beginPath(); spokes.forEach((a, i) => { const px = Math.cos(a) * R * k, py = Math.sin(a) * R * k; if (!i) x.moveTo(px, py); else { const m = (spokes[i - 1] + a) / 2; x.quadraticCurveTo(Math.cos(m) * R * k * .8, Math.sin(m) * R * k * .8, px, py); } }); x.stroke(); });
+  x.restore();
+}
+function skeleton(x, sx, sy, TS) {
+  const cx = sx + TS / 2, top = sy + TS * .08, bone = '#D9D2C0', dark = '#2A2620';
+  x.fillStyle = bone; x.strokeStyle = bone; x.lineCap = 'round';
+  x.beginPath(); x.arc(cx, top + TS * .14, TS * .13, 0, TAU); x.fill();                                         // skull
+  x.fillRect(cx - TS * .08, top + TS * .2, TS * .16, TS * .08);
+  x.fillStyle = dark; x.beginPath(); x.arc(cx - TS * .05, top + TS * .14, TS * .035, 0, TAU); x.arc(cx + TS * .05, top + TS * .14, TS * .035, 0, TAU); x.fill();
+  x.fillRect(cx - TS * .045, top + TS * .25, TS * .02, TS * .03); x.fillRect(cx + TS * .025, top + TS * .25, TS * .02, TS * .03);
+  x.lineWidth = Math.max(1.5, TS * .04);
+  x.beginPath(); x.moveTo(cx, top + TS * .3); x.lineTo(cx, top + TS * .62); x.stroke();                        // spine
+  for (let i = 0; i < 3; i++) { const y = top + TS * (.36 + i * .08), w = TS * (.16 - i * .02); x.beginPath(); x.moveTo(cx - w, y + TS * .03); x.quadraticCurveTo(cx, y - TS * .03, cx + w, y + TS * .03); x.stroke(); }
+  x.beginPath(); x.moveTo(cx - TS * .17, top + TS * .34); x.lineTo(cx - TS * .26, top + TS * .58); x.lineTo(cx - TS * .2, top + TS * .72);   // arms, hanging
+  x.moveTo(cx + TS * .17, top + TS * .34); x.lineTo(cx + TS * .27, top + TS * .55); x.lineTo(cx + TS * .34, top + TS * .62); x.stroke();
+  x.beginPath(); x.moveTo(cx - TS * .12, top + TS * .64); x.lineTo(cx + TS * .12, top + TS * .64); x.stroke();     // pelvis
+  x.beginPath(); x.moveTo(cx - TS * .09, top + TS * .66); x.lineTo(cx - TS * .25, top + TS * .76); x.lineTo(cx - TS * .3, top + TS * .88);   // legs, sitting
+  x.moveTo(cx + TS * .09, top + TS * .66); x.lineTo(cx + TS * .26, top + TS * .77); x.lineTo(cx + TS * .3, top + TS * .89); x.stroke();
+}
+function candy(x, sx, sy, TS, t) {
+  const b = Math.sin(t * 3 + sx) * TS * .04, cx = sx + TS / 2, cy = sy + TS / 2 + b, r = TS * .16;
+  x.fillStyle = '#FF8A1F';
+  x.beginPath(); x.moveTo(cx - r * .9, cy); x.lineTo(cx - r * 2, cy - r * .7); x.lineTo(cx - r * 2, cy + r * .7); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(cx + r * .9, cy); x.lineTo(cx + r * 2, cy - r * .7); x.lineTo(cx + r * 2, cy + r * .7); x.closePath(); x.fill();
+  x.fillStyle = '#8CC4FF'; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
+  x.strokeStyle = '#D8ECFF'; x.lineWidth = Math.max(1, TS * .04); x.beginPath(); x.arc(cx, cy, r * .55, Math.PI * 1.1, Math.PI * 1.9); x.stroke();
+  x.strokeStyle = '#FF8A1F'; x.lineWidth = Math.max(1, TS * .03); x.beginPath(); x.moveTo(cx - r * .7, cy + r * .5); x.lineTo(cx + r * .2, cy - r * .9); x.moveTo(cx - r * .1, cy + r * .95); x.lineTo(cx + r * .8, cy - r * .3); x.stroke();
+}
+function ombra(x, cx, cy, TS, t, kind, state, hat) {
+  const wob = Math.sin(t * 6 + cx) * TS * .03, guard = kind === 'guardian', hunter = kind === 'hunter';
+  x.save();
+  if (guard) { x.translate(cx, cy); x.scale(1.5, 1.5); x.translate(-cx, -cy); }
+  x.fillStyle = guard ? 'rgb(78,16,34)' : hunter ? 'rgb(18,40,66)' : 'rgb(52,26,78)';
+  x.beginPath(); x.moveTo(cx - TS * .34, cy + TS * .36);
+  x.quadraticCurveTo(cx - TS * .4, cy - TS * .38 + wob, cx, cy - TS * .4 + wob);
+  x.quadraticCurveTo(cx + TS * .4, cy - TS * .38 + wob, cx + TS * .34, cy + TS * .36);
+  for (let i = 0; i < 3; i++) x.lineTo(cx + TS * (.22 - i * .23), cy + TS * (i % 2 ? .36 : .22));
+  x.closePath(); x.fill();
+  if (guard) {   // crown of horns
+    x.beginPath(); x.moveTo(cx - TS * .22, cy - TS * .28 + wob); x.lineTo(cx - TS * .3, cy - TS * .52 + wob); x.lineTo(cx - TS * .1, cy - TS * .36 + wob);
+    x.moveTo(cx + TS * .22, cy - TS * .28 + wob); x.lineTo(cx + TS * .3, cy - TS * .52 + wob); x.lineTo(cx + TS * .1, cy - TS * .36 + wob); x.fill();
+  }
+  if (hat === 'witch') {
+    x.fillStyle = '#3A2257'; x.strokeStyle = '#7A4FA8'; x.lineWidth = Math.max(1, TS * .025);
+    x.beginPath(); x.ellipse(cx, cy - TS * .36 + wob, TS * .3, TS * .07, 0, 0, TAU); x.fill(); x.stroke();
+    x.beginPath(); x.moveTo(cx - TS * .17, cy - TS * .38 + wob); x.quadraticCurveTo(cx - TS * .02, cy - TS * .6 + wob, cx + TS * .14, cy - TS * .82 + wob); x.lineTo(cx + TS * .17, cy - TS * .38 + wob); x.closePath(); x.fill(); x.stroke();
+    x.fillStyle = '#FF8A1F'; x.fillRect(cx - TS * .16, cy - TS * .45 + wob, TS * .32, TS * .05);
+  } else if (hat === 'pumpkin') {
+    pumpkinHead(x, cx, cy - TS * .42 + wob, TS * .5, t);
+  } else if (hat === 'skull') {
+    x.fillStyle = '#D9D2C0'; x.beginPath(); x.arc(cx, cy - TS * .02 + wob, TS * .16, 0, TAU); x.fill(); x.fillRect(cx - TS * .09, cy + TS * .08 + wob, TS * .18, TS * .08);
+  }
+  const open = state !== 'sleep';
+  x.fillStyle = guard ? '#FFC857' : hunter ? (state === 'chase' ? '#5CE1FF' : '#3E7C99') : state === 'chase' ? '#FF4D5E' : '#8A6BA8';
+  if (hat === 'skull') x.fillStyle = '#4E1022';
+  const ey = hat === 'skull' ? -TS * .04 : -TS * .08;
+  if (open) { x.beginPath(); x.arc(cx - TS * .12 * (hat === 'skull' ? .6 : 1), cy + ey + wob, TS * .06, 0, TAU); x.arc(cx + TS * .12 * (hat === 'skull' ? .6 : 1), cy + ey + wob, TS * .06, 0, TAU); x.fill(); }
+  if (hat === 'skull') { x.fillStyle = '#FFC857'; x.beginPath(); x.arc(cx - TS * .07, cy + ey + wob, TS * .025, 0, TAU); x.arc(cx + TS * .07, cy + ey + wob, TS * .025, 0, TAU); x.fill(); }
+  x.restore();
+  if (guard) for (let i = 0; i < 3; i++) { x.fillStyle = i < 2 ? '#FF5A6E' : 'rgba(255,90,110,.2)'; x.fillRect(cx - (3 * TS * .16) / 2 + i * TS * .16 + TS * .02, cy - TS * .95, TS * .12, TS * .08); }
+}
+function pumpkinHead(x, cx, cy, s, t) {
+  const r = s * .42; x.fillStyle = '#E8731A';
+  [-.5, 0, .5].forEach(o => { x.beginPath(); x.ellipse(cx + o * r, cy, r * .6, r * .75, 0, 0, TAU); x.fill(); });
+  x.fillStyle = '#3E5A2A'; x.fillRect(cx - s * .04, cy - r * 1.05, s * .08, s * .12);
+  x.fillStyle = '#FFD27A';
+  x.beginPath(); x.moveTo(cx - r * .5, cy - r * .05); x.lineTo(cx - r * .15, cy - r * .05); x.lineTo(cx - r * .32, cy - r * .38); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(cx + r * .5, cy - r * .05); x.lineTo(cx + r * .15, cy - r * .05); x.lineTo(cx + r * .32, cy - r * .38); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(cx - r * .5, cy + r * .2); x.lineTo(cx + r * .5, cy + r * .2); x.lineTo(cx, cy + r * .55); x.closePath(); x.fill();
+}
+function bat(x, cx, cy, s, t) {
+  const f = Math.sin(t * 22) * .5 + .5;
+  x.fillStyle = '#1A1420'; x.strokeStyle = '#4A3858'; x.lineWidth = 1;
+  x.beginPath(); x.moveTo(cx, cy);
+  x.quadraticCurveTo(cx - s * .3, cy - s * (.35 * f + .05), cx - s * .55, cy - s * .1 * f);
+  x.quadraticCurveTo(cx - s * .4, cy + s * .05, cx - s * .35, cy + s * .15); x.quadraticCurveTo(cx - s * .2, cy + s * .05, cx - s * .12, cy + s * .14);
+  x.quadraticCurveTo(cx, cy + s * .05, cx + s * .12, cy + s * .14); x.quadraticCurveTo(cx + s * .2, cy + s * .05, cx + s * .35, cy + s * .15);
+  x.quadraticCurveTo(cx + s * .4, cy + s * .05, cx + s * .55, cy - s * .1 * f); x.quadraticCurveTo(cx + s * .3, cy - s * (.35 * f + .05), cx, cy);
+  x.fill(); x.stroke();
+  x.beginPath(); x.arc(cx, cy + s * .02, s * .09, 0, TAU); x.fill();
+  x.fillStyle = '#FF8A1F'; x.beginPath(); x.arc(cx - s * .035, cy, s * .018, 0, TAU); x.arc(cx + s * .035, cy, s * .018, 0, TAU); x.fill();
+}
+// decorations live ONLY on wall tiles, never on the floor you walk on: a niche carved in the wall with a small pumpkin,
+// a skeleton carved in the stone like a relief. No bobbing and muted colours, so they never look like something to pick up.
+function wallPumpkin(x, sx, sy, TS, t, on) {
+  x.fillStyle = 'rgba(0,0,0,.45)'; x.beginPath(); x.moveTo(sx + TS * .18, sy + TS * .92); x.lineTo(sx + TS * .18, sy + TS * .5); x.quadraticCurveTo(sx + TS * .5, sy + TS * .2, sx + TS * .82, sy + TS * .5); x.lineTo(sx + TS * .82, sy + TS * .92); x.closePath(); x.fill();
+  x.save(); x.globalAlpha = on ? .9 : .6; pumpkin(x, sx + TS * .22, sy + TS * .36, TS * .56, t, on, false); x.restore();
+}
+function wallSkeleton(x, sx, sy, TS) {
+  x.save(); x.globalAlpha = .45; skeleton(x, sx + TS * .05, sy + TS * .04, TS * .9); x.restore();
+}
+function candle(x, sx, sy, TS, t) {
+  const cx = sx + TS / 2, cy = sy + TS / 2, f = .85 + .15 * Math.sin(t * 12 + sx);
+  x.fillStyle = 'rgba(255,170,60,.12)'; x.fillRect(sx, sy, TS, TS);
+  x.fillStyle = '#4A4038'; x.beginPath(); x.ellipse(cx, cy + TS * .32, TS * .22, TS * .06, 0, 0, TAU); x.fill();
+  [[-.12, .18, .12], [.08, .26, .1], [.18, .12, .08]].forEach(([o, h, w]) => {
+    x.fillStyle = '#E9DFC6'; x.fillRect(cx + TS * o - TS * w / 2, cy + TS * .32 - TS * h * 1.6, TS * w, TS * h * 1.6);
+    x.fillStyle = '#FFB547'; x.beginPath(); x.ellipse(cx + TS * o, cy + TS * .32 - TS * h * 1.6 - TS * .06 * f, TS * .035, TS * .07 * f, 0, 0, TAU); x.fill();
+  });
+}
+function player(x, px, py, TS, orange, t) {
+  x.save(); x.translate(px, py);
+  x.fillStyle = '#EDE6D6'; x.beginPath(); x.arc(0, 0, TS * .3, 0, TAU); x.fill();
+  x.fillStyle = '#2A2620'; x.beginPath(); x.arc(-TS * .02, 0, TS * .3, Math.PI * .55, Math.PI * 1.45); x.closePath(); x.fill();
+  x.beginPath(); x.ellipse(-TS * .06, 0, TS * .1, TS * .27, 0, 0, TAU); x.fill();
+  x.beginPath(); x.arc(TS * .15, -TS * .09, TS * .035, 0, TAU); x.arc(TS * .15, TS * .09, TS * .035, 0, TAU); x.fill();
+  x.restore();
+  const lx = px + TS * .34, ly = py + TS * .3, w = TS * .17, h = TS * .21, fl = .9 + .1 * Math.sin(t * 9);
+  x.fillStyle = '#2A2620'; x.fillRect(lx - w * .35, ly - h * .68, w * .7, h * .14); x.fillRect(lx - w / 2, ly + h * .42, w, h * .12);
+  x.fillStyle = orange ? '#FF8A1F' : '#FFB547'; x.fillRect(lx - w * .42, ly - h * .54, w * .84, h * .96);
+  x.fillStyle = orange ? '#FFE0B0' : '#FFF0C8'; x.beginPath(); x.ellipse(lx, ly - h * .02, w * .18, h * .3 * fl, 0, 0, TAU); x.fill();
+  x.strokeStyle = '#2A2620'; x.lineWidth = Math.max(1, TS * .03); x.strokeRect(lx - w * .42, ly - h * .54, w * .84, h * .96);
+}
+
+// ---------------- single assets ----------------
+const ASSETS = {
+  pumpkinOff: (x, t) => { wall(x, 60, 40, 120); floor(x, 60, 160, 120, .3); wallPumpkin(x, 60, 40, 120, t, false); dark(x, .4); },
+  pumpkinOn: (x, t) => { wall(x, 60, 40, 120); floor(x, 60, 160, 120, .3); wallPumpkin(x, 60, 40, 120, t, true); },
+  web: (x) => { wall(x, 0, 0, 120); wall(x, 120, 0, 120); wall(x, 0, 120, 120); floor(x, 120, 120, 120, .3); web(x, 120, 120, 120, 0); },
+  skeleton: (x) => { wall(x, 60, 40, 120); crypt(x, 60, 160, 120, .3); wallSkeleton(x, 60, 40, 120); },
+  candy: (x, t) => { floor(x, 60, 60, 120, .3); candy(x, 60, 60, 120, t); },
+  shadowHat: (x, t) => { floor(x, 60, 70, 120, .3); ombra(x, 120, 140, 120, t, '', 'wait', 'witch'); },
+  shadowChase: (x, t) => { floor(x, 60, 70, 120, .3); ombra(x, 120, 140, 120, t, '', 'chase', 'witch'); },
+  hunterPump: (x, t) => { floor(x, 60, 70, 120, .3); ombra(x, 120, 140, 120, t, 'hunter', 'chase', 'pumpkin'); },
+  guardian: (x, t) => { crypt(x, 30, 60, 180, .3); ombra(x, 120, 165, 80, t, 'guardian', 'chase', 'skull'); },
+  lantern: (x, t) => { const g = x.createRadialGradient(120, 120, 0, 120, 120, 110); g.addColorStop(0, 'rgba(255,138,31,.45)'); g.addColorStop(1, 'rgba(255,138,31,0)'); x.fillStyle = g; x.fillRect(0, 0, 240, 240); player(x, 110, 110, 120, true, t); },
+  bat: (x, t) => bat(x, 120, 110 + Math.sin(t * 2) * 10, 170, t),
+  candle: (x, t) => { crypt(x, 60, 60, 120, .3); candle(x, 60, 60, 120, t); },
+};
+function dark(x, a) { x.fillStyle = `rgba(6,7,10,${a})`; x.fillRect(0, 0, 240, 240); }
+
+// ---------------- the scene: a corridor and the entrance of a crypt ----------------
+const MAP = [
+  '############',
+  '#....#.....#',
+  '#.##.#.###.#',
+  '#.#P...#R..#',
+  '#.#.##.#RS.#',
+  '#...C..#R..#',
+  '#.#.##.....#',
+  '############',
+];
+const DECOR = { web: [[1, 1, 0], [10, 1, 1], [4, 6, 2]], pumpkin: [[5, 1], [4, 4], [9, 2], [2, 4]], candy: [[10, 5]], sk: [[7, 3]] };
+function drawScene(x, t) {
+  const TS = 60, W = 720, H = 480, px = 5 * TS + TS / 2, py = 3 * TS + TS / 2 + TS * 2 / 2 - 30;
+  x.fillStyle = '#06070A'; x.fillRect(0, 0, W, H);
+  const hash = (a, b) => { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); };
+  MAP.forEach((row, y) => [...row].forEach((c, xx) => {
+    const sx = xx * TS, sy = y * TS;
+    if (c === '#') wall(x, sx, sy, TS); else if (c === 'R' || c === 'S') crypt(x, sx, sy, TS, hash(xx, y)); else floor(x, sx, sy, TS, hash(xx, y));
+  }));
+  const lx = 5.5 * TS, ly = 3.5 * TS;
+  if (HALL) {
+    DECOR.web.forEach(([a, b, c]) => web(x, a * TS, b * TS, TS, c));
+    DECOR.pumpkin.forEach(([a, b]) => wallPumpkin(x, a * TS, b * TS, TS, t, Math.hypot(a + .5 - 5.5, b + .5 - 3.5) < 3.2));
+    DECOR.candy.forEach(([a, b]) => candy(x, a * TS, b * TS, TS, t));
+    DECOR.sk.forEach(([a, b]) => wallSkeleton(x, a * TS, b * TS, TS));
+  } else {
+    // normal: plain gem and an unlit brazier
+    const cx = 10.5 * TS, cy = 5.5 * TS + Math.sin(t * 3) * 2, r = TS * .2;
+    x.fillStyle = '#8CC4FF'; x.beginPath(); x.moveTo(cx, cy - r); x.lineTo(cx + r, cy); x.lineTo(cx, cy + r); x.lineTo(cx - r, cy); x.closePath(); x.fill();
+  }
+  ombra(x, 4.5 * TS, 5.5 * TS, TS, t, '', 'wait', HALL ? 'witch' : null);
+  ombra(x, 9.5 * TS, 1.5 * TS, TS, t, 'hunter', 'chase', HALL ? 'pumpkin' : null);
+  // darkness outside the lantern light
+  const img = x.getImageData(0, 0, W, H);
+  x.save();
+  const g = x.createRadialGradient(lx, ly, TS * .6, lx, ly, TS * 3.6);
+  g.addColorStop(0, 'rgba(6,7,10,0)'); g.addColorStop(1, 'rgba(6,7,10,.78)');
+  x.fillStyle = g; x.fillRect(0, 0, W, H); x.restore();
+  const w2 = x.createRadialGradient(lx, ly, 0, lx, ly, TS * 3);
+  w2.addColorStop(0, HALL ? 'rgba(255,138,31,.18)' : 'rgba(255,181,71,.14)'); w2.addColorStop(1, 'rgba(255,181,71,0)');
+  x.fillStyle = w2; x.fillRect(0, 0, W, H);
+  if (HALL) {   // lit pumpkins shine through the dark
+    DECOR.pumpkin.forEach(([a, b]) => { if (Math.hypot(a + .5 - 5.5, b + .5 - 3.5) < 3.2) { const cx = (a + .5) * TS, cy = (b + .55) * TS, gg = x.createRadialGradient(cx, cy, 0, cx, cy, TS); gg.addColorStop(0, 'rgba(255,150,40,.12)'); gg.addColorStop(1, 'rgba(255,150,40,0)'); x.fillStyle = gg; x.fillRect(cx - TS, cy - TS, TS * 2, TS * 2); } });
+    const bt = (t * 0.12) % 1; bat(x, -40 + bt * (W + 80), 70 + Math.sin(t * 2.3) * 24, 70, t);
+  }
+  player(x, lx, ly, TS, HALL, t);
+}
+
+// ---------------- loop ----------------
+const singles = [...document.querySelectorAll('canvas[data-a]')].map(c => ({ c, x: c.getContext('2d'), f: ASSETS[c.dataset.a] }));
+const sc = document.getElementById('scene'), sx = sc.getContext('2d');
+const mp = document.getElementById('menuPumpkin').getContext('2d'), ms = document.getElementById('menuSkel').getContext('2d');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(ms_) {
+  const t = reduce ? 1 : ms_ / 1000;
+  singles.forEach(s => { s.x.clearRect(0, 0, 240, 240); s.f(s.x, t); });
+  drawScene(sx, t);
+  mp.clearRect(0, 0, 108, 108); pumpkin(mp, 4, -4, 100, t, true, false);
+  ms.clearRect(0, 0, 140, 120); skeleton(ms, 20, 10, 100);
+  if (!reduce) requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+const tN = document.getElementById('tNormal'), tH = document.getElementById('tHall');
+tN.onclick = () => { HALL = false; tN.setAttribute('aria-pressed', 'true'); tH.setAttribute('aria-pressed', 'false'); };
+tH.onclick = () => { HALL = true; tH.setAttribute('aria-pressed', 'true'); tN.setAttribute('aria-pressed', 'false'); };
+</script>
+</body>
+</html>
